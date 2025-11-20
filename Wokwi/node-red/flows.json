@@ -1,0 +1,290 @@
+[
+  {
+    "id": "tab-flow-wb",
+    "type": "tab",
+    "label": "WorkBalance IoT",
+    "disabled": false,
+    "info": ""
+  },
+  {
+    "id": "mqtt-broker-wb",
+    "type": "mqtt-broker",
+    "name": "Mosquitto Public",
+    "broker": "test.mosquitto.org",
+    "port": "1883",
+    "clientid": "node-red-workbalance",
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "60",
+    "cleansession": true,
+    "birthTopic": "",
+    "birthQos": "0",
+    "birthRetain": "false",
+    "birthPayload": "",
+    "closeTopic": "",
+    "closeQos": "0",
+    "closeRetain": "false",
+    "closePayload": "",
+    "willTopic": "",
+    "willQos": "0",
+    "willRetain": "false",
+    "willPayload": ""
+  },
+  {
+    "id": "ui-tab-wb",
+    "type": "ui_tab",
+    "name": "WorkBalance Hub",
+    "icon": "dashboard",
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "ui-group-wb",
+    "type": "ui_group",
+    "name": "Estação Desk-01",
+    "tab": "ui-tab-wb",
+    "order": 1,
+    "disp": true,
+    "width": "12",
+    "collapse": false
+  },
+  {
+    "id": "mqtt-in-wb",
+    "type": "mqtt in",
+    "z": "tab-flow-wb",
+    "name": "Leituras Estações",
+    "topic": "workbalance/estacoes/#",
+    "qos": "0",
+    "datatype": "auto",
+    "broker": "mqtt-broker-wb",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "x": 150,
+    "y": 80,
+    "wires": [
+      [
+        "json-node-wb"
+      ]
+    ]
+  },
+  {
+    "id": "json-node-wb",
+    "type": "json",
+    "z": "tab-flow-wb",
+    "name": "JSON parse",
+    "property": "payload",
+    "action": "obj",
+    "pretty": false,
+    "x": 360,
+    "y": 80,
+    "wires": [
+      [
+        "fn-temp-wb",
+        "fn-ruido-wb",
+        "fn-lumi-wb",
+        "fn-conforto-wb",
+        "debug-raw-wb"
+      ]
+    ]
+  },
+  {
+    "id": "fn-temp-wb",
+    "type": "function",
+    "z": "tab-flow-wb",
+    "name": "Temperatura",
+    "func": "let d = msg.payload;\nmsg.topic = d.estacaoId || \"desk-01\";\nmsg.payload = d.temperatura;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 580,
+    "y": 40,
+    "wires": [
+      [
+        "chart-temp-wb"
+      ]
+    ]
+  },
+  {
+    "id": "fn-ruido-wb",
+    "type": "function",
+    "z": "tab-flow-wb",
+    "name": "Ruído",
+    "func": "let d = msg.payload;\nmsg.topic = d.estacaoId || \"desk-01\";\nmsg.payload = d.ruido;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 575,
+    "y": 100,
+    "wires": [
+      [
+        "chart-ruido-wb"
+      ]
+    ]
+  },
+  {
+    "id": "fn-lumi-wb",
+    "type": "function",
+    "z": "tab-flow-wb",
+    "name": "Luminosidade",
+    "func": "let d = msg.payload;\nmsg.topic = d.estacaoId || \"desk-01\";\nmsg.payload = d.luminosidade;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 590,
+    "y": 160,
+    "wires": [
+      [
+        "chart-lumi-wb"
+      ]
+    ]
+  },
+  {
+    "id": "fn-conforto-wb",
+    "type": "function",
+    "z": "tab-flow-wb",
+    "name": "Índice de conforto",
+    "func": "let d = msg.payload;\nlet motivos = [];\n\nif (d.temperatura > 28) motivos.push(\"Calor excessivo\");\nif (d.ruido > 70) motivos.push(\"Ruído alto\");\nif (d.luminosidade < 200) motivos.push(\"Pouca luz\");\n\nlet indice = motivos.length === 0 ? \"Confortável\" : \"Desconfortável\";\n\nmsg.payload = `Estação ${d.estacaoId || \"desk-01\"}: ${indice}` + (motivos.length ? ` (Motivos: ${motivos.join(\", \")})` : \"\");\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 605,
+    "y": 220,
+    "wires": [
+      [
+        "text-conforto-wb"
+      ]
+    ]
+  },
+  {
+    "id": "chart-temp-wb",
+    "type": "ui_chart",
+    "z": "tab-flow-wb",
+    "name": "Temperatura (°C)",
+    "group": "ui-group-wb",
+    "order": 1,
+    "width": 0,
+    "height": 0,
+    "label": "Temperatura (°C)",
+    "chartType": "line",
+    "legend": "false",
+    "xformat": "HH:mm:ss",
+    "interpolate": "linear",
+    "nodata": "Sem dados",
+    "dot": false,
+    "ymin": "0",
+    "ymax": "40",
+    "removeOlder": "60",
+    "removeOlderPoints": "",
+    "removeOlderUnit": "60",
+    "cutout": 0,
+    "useOneColor": false,
+    "useUTC": false,
+    "colors": [],
+    "outputs": 0,
+    "x": 830,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "chart-ruido-wb",
+    "type": "ui_chart",
+    "z": "tab-flow-wb",
+    "name": "Ruído (dB)",
+    "group": "ui-group-wb",
+    "order": 2,
+    "width": 0,
+    "height": 0,
+    "label": "Ruído (dB)",
+    "chartType": "line",
+    "legend": "false",
+    "xformat": "HH:mm:ss",
+    "interpolate": "linear",
+    "nodata": "Sem dados",
+    "dot": false,
+    "ymin": "30",
+    "ymax": "100",
+    "removeOlder": "60",
+    "removeOlderPoints": "",
+    "removeOlderUnit": "60",
+    "cutout": 0,
+    "useOneColor": false,
+    "useUTC": false,
+    "colors": [],
+    "outputs": 0,
+    "x": 825,
+    "y": 100,
+    "wires": []
+  },
+  {
+    "id": "chart-lumi-wb",
+    "type": "ui_chart",
+    "z": "tab-flow-wb",
+    "name": "Luminosidade",
+    "group": "ui-group-wb",
+    "order": 3,
+    "width": 0,
+    "height": 0,
+    "label": "Luminosidade",
+    "chartType": "line",
+    "legend": "false",
+    "xformat": "HH:mm:ss",
+    "interpolate": "linear",
+    "nodata": "Sem dados",
+    "dot": false,
+    "ymin": "0",
+    "ymax": "1000",
+    "removeOlder": "60",
+    "removeOlderPoints": "",
+    "removeOlderUnit": "60",
+    "cutout": 0,
+    "useOneColor": false,
+    "useUTC": false,
+    "colors": [],
+    "outputs": 0,
+    "x": 840,
+    "y": 160,
+    "wires": []
+  },
+  {
+    "id": "text-conforto-wb",
+    "type": "ui_text",
+    "z": "tab-flow-wb",
+    "group": "ui-group-wb",
+    "order": 4,
+    "width": 0,
+    "height": 0,
+    "name": "Status do ambiente",
+    "label": "Status do ambiente",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "x": 850,
+    "y": 220,
+    "wires": []
+  },
+  {
+    "id": "debug-raw-wb",
+    "type": "debug",
+    "z": "tab-flow-wb",
+    "name": "Payload bruto",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 620,
+    "y": 280,
+    "wires": []
+  }
+]
